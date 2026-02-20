@@ -2,35 +2,39 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>四則演算プリント完全版</title>
+<title>四則演算プリント A4完全版</title>
 <style>
 body{
   font-family:"ＭＳ ゴシック","MS Gothic",monospace;
+  margin:0;
 }
-.controls{ margin-bottom:20px; }
+
+.controls{ margin:10px; }
 
 .sheet{
   width:210mm;
-  margin:auto;
+  height:297mm;
   display:grid;
   grid-template-columns:1fr 1fr;
-  column-gap:100px;
-  margin-bottom:40px;
+  column-gap:10mm;
+  margin:auto;
+  page-break-after:always;
 }
 
 .col{
-  display:flex;
-  flex-direction:column;
-  gap:32px;
+  display:grid;
+  grid-template-rows:repeat(10, 1fr); /* 左右10問ずつ均等配置 */
+  gap:2mm;
 }
 
 .problem{
-  font-size:26px;
+  font-size:18px;
+  line-height:1.1;
 }
 
 .number{
   font-weight:bold;
-  margin-bottom:4px;
+  margin-bottom:2px;
 }
 
 .vertical{
@@ -39,6 +43,7 @@ body{
 }
 
 @media print{
+  body{ margin:0; }
   .controls{display:none;}
   .sheet{
     page-break-after:always;
@@ -49,7 +54,6 @@ body{
 <body>
 
 <div class="controls">
-
 演算：
 <select id="operation">
 <option value="add">足し算</option>
@@ -108,14 +112,12 @@ body{
 
 <button onclick="generate()">生成</button>
 <button onclick="window.print()">印刷</button>
-
 </div>
 
 <div id="container"></div>
 
 <script>
-
-const FIXED_DIGITS = 6;
+const FIXED_DIGITS=6;
 
 function rand(min,max){
   return Math.floor(Math.random()*(max-min+1))+min;
@@ -152,10 +154,8 @@ function hasBorrow(a,b){
 }
 
 function generate(){
-
   const container=document.getElementById("container");
   container.innerHTML="";
-
   const count=parseInt(document.getElementById("sheetCount").value);
   const op=document.getElementById("operation").value;
   const format=document.getElementById("format").value;
@@ -166,21 +166,17 @@ function generate(){
   const digitB=parseInt(document.getElementById("digitB").value);
 
   for(let s=0;s<count;s++){
-
     const sheet=document.createElement("div");
     sheet.className="sheet";
 
     const left=document.createElement("div");
     left.className="col";
-
     const right=document.createElement("div");
     right.className="col";
 
     for(let i=1;i<=20;i++){
       const target=(i<=10)?left:right;
-      target.innerHTML+=createProblem(
-        i,op,format,carry,borrow,remainder,digitA,digitB
-      );
+      target.innerHTML+=createProblem(i,op,format,carry,borrow,remainder,digitA,digitB);
     }
 
     sheet.appendChild(left);
@@ -190,7 +186,6 @@ function generate(){
 }
 
 function createProblem(num,op,format,carry,borrow,remainder,digitA,digitB){
-
   let a,b;
 
   if(op==="div"){
@@ -234,7 +229,6 @@ ${toFull(a)} ${symbol} ${toFull(b)} ＝
   }
 
   let symbol={add:"＋",sub:"−",mul:"×"}[op];
-
   let aStr = String(a).padStart(FIXED_DIGITS," ");
   let bStr = String(b).padStart(FIXED_DIGITS," ");
   let bottom = symbol + bStr;
@@ -249,7 +243,6 @@ ${line}</div>
 }
 
 generate();
-
 </script>
 </body>
 </html>
