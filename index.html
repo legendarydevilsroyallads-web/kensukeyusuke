@@ -2,52 +2,52 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>四則演算プリント A4完全版</title>
+<title>四則演算プリント A4 完全版</title>
 <style>
+@page {
+  size: A4;
+  margin: 0;
+}
+
 body{
   font-family:"ＭＳ ゴシック","MS Gothic",monospace;
   margin:0;
 }
 
-.controls{ margin:10px; }
+.controls{
+  margin:10px;
+}
 
 .sheet{
   width:210mm;
   height:297mm;
   display:grid;
   grid-template-columns:1fr 1fr;
-  column-gap:10mm;
-  margin:auto;
+  column-gap:5mm; 
   page-break-after:always;
 }
 
 .col{
   display:grid;
-  grid-template-rows:repeat(10, 1fr); /* 左右10問ずつ均等配置 */
-  gap:2mm;
+  grid-template-rows:repeat(10, 1fr);
+  gap:0; /* 行間ゼロで最大活用 */
 }
 
 .problem{
   font-size:18px;
-  line-height:1.1;
+  line-height:1;
+  margin:0;
+  padding:0;
 }
 
 .number{
   font-weight:bold;
-  margin-bottom:2px;
+  margin-bottom:1px;
 }
 
 .vertical{
   text-align:right;
   white-space:pre;
-}
-
-@media print{
-  body{ margin:0; }
-  .controls{display:none;}
-  .sheet{
-    page-break-after:always;
-  }
 }
 </style>
 </head>
