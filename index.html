@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>四則演算プリント完全版</title>
+<style>
+body{
+  font-family:"ＭＳ ゴシック","MS Gothic",monospace;
+}
+.controls{ margin-bottom:20px; }
+
+.sheet{
+  width:210mm;
+  margin:auto;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  column-gap:100px;
+  margin-bottom:40px;
+}
+
+.col{
+  display:flex;
+  flex-direction:column;
+  gap:32px;
+}
+
+.problem{
+  font-size:26px;
+}
+
+.number{
+  font-weight:bold;
+  margin-bottom:4px;
+}
+
+.vertical{
+  text-align:right;
+  white-space:pre;
+}
+
+@media print{
+  .controls{display:none;}
+  .sheet{
+    page-break-after:always;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="controls">
+
+演算：
+<select id="operation">
+<option value="add">足し算</option>
+<option value="sub">引き算</option>
+<option value="mul">かけ算</option>
+<option value="div">割り算</option>
+</select>
+
+形式：
+<select id="format">
+<option value="vertical">筆算</option>
+<option value="horizontal">横式</option>
+</select>
+
+上の数 桁：
+<select id="digitA">
+<option value="1">1桁</option>
+<option value="2">2桁</option>
+<option value="3">3桁</option>
+</select>
+
+下の数 桁：
+<select id="digitB">
+<option value="1">1桁</option>
+<option value="2">2桁</option>
+<option value="3">3桁</option>
+</select>
+
+繰り上がり：
+<select id="carry">
+<option value="on">あり</option>
+<option value="off">なし</option>
+</select>
+
+繰り下がり：
+<select id="borrow">
+<option value="on">あり</option>
+<option value="off">なし</option>
+</select>
+
+割り算あまり：
+<select id="remainder">
+<option value="on">あり</option>
+<option value="off">なし</option>
+</select>
+
+作成枚数：
+<select id="sheetCount">
+<option value="1">1枚</option>
+<option value="2">2枚</option>
+<option value="3">3枚</option>
+<option value="5">5枚</option>
+<option value="10">10枚</option>
+<option value="20">20枚</option>
+</select>
+
+<button onclick="generate()">生成</button>
+<button onclick="window.print()">印刷</button>
+
+</div>
+
+<div id="container"></div>
+
+<script>
+
+const FIXED_DIGITS = 6;
+
+function rand(min,max){
+  return Math.floor(Math.random()*(max-min+1))+min;
+}
+
+function toFull(num){
+  return String(num).replace(/[0-9]/g,s =>
+    String.fromCharCode(s.charCodeAt(0)+65248)
+  );
+}
+
+function makeNumber(d){
+  if(d==1) return rand(1,9);
+  if(d==2) return rand(10,99);
+  if(d==3) return rand(100,999);
+}
+
+function hasCarry(a,b){
+  while(a>0 || b>0){
+    if((a%10)+(b%10)>=10) return true;
+    a=Math.floor(a/10);
+    b=Math.floor(b/10);
+  }
+  return false;
+}
+
+function hasBorrow(a,b){
+  while(a>0 || b>0){
+    if((a%10)<(b%10)) return true;
+    a=Math.floor(a/10);
+    b=Math.floor(b/10);
+  }
+  return false;
+}
+
+function generate(){
+
+  const container=document.getElementById("container");
+  container.innerHTML="";
+
+  const count=parseInt(document.getElementById("sheetCount").value);
+  const op=document.getElementById("operation").value;
+  const format=document.getElementById("format").value;
+  const carry=document.getElementById("carry").value;
+  const borrow=document.getElementById("borrow").value;
+  const remainder=document.getElementById("remainder").value;
+  const digitA=parseInt(document.getElementById("digitA").value);
+  const digitB=parseInt(document.getElementById("digitB").value);
+
+  for(let s=0;s<count;s++){
+
+    const sheet=document.createElement("div");
+    sheet.className="sheet";
+
+    const left=document.createElement("div");
+    left.className="col";
+
+    const right=document.createElement("div");
+    right.className="col";
+
+    for(let i=1;i<=20;i++){
+      const target=(i<=10)?left:right;
+      target.innerHTML+=createProblem(
+        i,op,format,carry,borrow,remainder,digitA,digitB
+      );
+    }
+
+    sheet.appendChild(left);
+    sheet.appendChild(right);
+    container.appendChild(sheet);
+  }
+}
+
+function createProblem(num,op,format,carry,borrow,remainder,digitA,digitB){
+
+  let a,b;
+
+  if(op==="div"){
+    let divisor=makeNumber(digitB);
+    let q=rand(2,50);
+    let r=(remainder==="on")?rand(0,divisor-1):0;
+    a=divisor*q+r;
+    b=divisor;
+
+    if(format==="horizontal"){
+      return `<div class="problem">
+<div class="number">（${toFull(num)}）</div>
+${toFull(a)} ÷ ${toFull(b)} ＝
+</div>`;
+    }
+
+    return `<div class="problem">
+<div class="number">（${toFull(num)}）</div>
+<div class="vertical">
+　＿＿＿＿
+${toFull(b)}）${toFull(a)}
+</div>
+</div>`;
+  }
+
+  do{
+    a=makeNumber(digitA);
+    b=makeNumber(digitB);
+    if(op==="sub" && a<b){ [a,b]=[b,a]; }
+  }while(
+    (op==="add" && carry==="off" && hasCarry(a,b)) ||
+    (op==="sub" && borrow==="off" && hasBorrow(a,b))
+  );
+
+  if(format==="horizontal"){
+    let symbol={add:"＋",sub:"−",mul:"×"}[op];
+    return `<div class="problem">
+<div class="number">（${toFull(num)}）</div>
+${toFull(a)} ${symbol} ${toFull(b)} ＝
+</div>`;
+  }
+
+  let symbol={add:"＋",sub:"−",mul:"×"}[op];
+
+  let aStr = String(a).padStart(FIXED_DIGITS," ");
+  let bStr = String(b).padStart(FIXED_DIGITS," ");
+  let bottom = symbol + bStr;
+  let line = "―".repeat(FIXED_DIGITS + 1);
+
+  return `<div class="problem">
+<div class="number">（${toFull(num)}）</div>
+<div class="vertical">${toFull(aStr)}
+${toFull(bottom)}
+${line}</div>
+</div>`;
+}
+
+generate();
+
+</script>
+</body>
+</html>
